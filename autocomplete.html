@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Autocomplete de Propiedades</title>
+  <style>
+    input {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .autocomplete-items {
+      border: 1px solid #ddd;
+      max-height: 200px;
+      overflow-y: auto;
+      background: white;
+      position: absolute;
+      z-index: 9999;
+      width: calc(100% - 20px);
+    }
+    .autocomplete-items div {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .autocomplete-items div:hover {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <input id="autocomplete" type="text" placeholder="Escribe la dirección...">
+
+  <script src="https://js.jotform.com/JFCustomWidget.min.js"></script>
+  <script>
+    const API_URL = "https://script.google.com/a/macros/schumacherpropiedades.com/s/AKfycbxlboQmRaurh7ZzKyZCunzXmWeo8TF8c7BVsGK_sHcOlogIp8g7H814jLd8-8-rgNZfPA/exec";
+    let propiedades = [];
+
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => {
+        propiedades = data;
+      });
+
+    const input = document.getElementById("autocomplete");
+
+    input.addEventListener("input", function() {
+      closeAllLists();
+      const val = this.value;
+      if (!val) return false;
+
+      const list = document.createElement("div");
+      list.setAttribute("id", this.id + "autocomplete-list");
+      list.setAttribute("class", "autocomplete-items");
+      this.parentNode.appendChild(list);
+
+      propiedades.forEach(item => {
+        if (item.toLowerCase().includes(val.toLowerCase())) {
+          const option = document.createElement("div");
+          option.innerHTML = "<strong>" + item.substr(0, val.length) + "</strong>";
+          option.innerHTML += item.substr(val.length);
+          option.innerHTML += "<input type='hidden' value='" + item + "'>";
+
+          option.addEventListener("click", function() {
+            input.value = this.getElementsByTagName("input")[0].value;
+            closeAllLists();
+            JFCustomWidget.sendData({ value: input.value });
+          });
+
+          list.appendChild(option);
+        }
+      });
+    });
+
+    function closeAllLists(elmnt) {
+      const items = document.getElementsByClassName("autocomplete-items");
+      for (let i = 0; i < items.length; i++) {
+        if (elmnt != items[i] && elmnt != input) {
+          items[i].parentNode.removeChild(items[i]);
+        }
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      closeAllLists(e.target);
+    });
+  </script>
+</body>
+</html>
